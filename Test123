@@ -1,0 +1,73 @@
+Here’s your data in a structured tabular format:  
+
+| Sanction Amount Range | Category | Overall Eligibility | OTC-Eligibility | Non-OTC Eligibility |
+|----------------------|----------|---------------------|----------------|-------------------|
+| 50k - 1L           | A        | 40,000              | 20,000         | 40,000           |
+| 1 - 1.5L           | A        | 45,000              | 22,000         | 45,000           |
+| >1.5L              | A        | 50,000              | 25,000         | 50,000           |
+| 50k - 1L           | B        | 30,000              | 15,000         | 30,000           |
+| 1 - 1.5L           | B        | 35,000              | 18,000         | 35,000           |
+| >1.5L              | B        | 40,000              | 20,000         | 40,000           |
+| 50k - 1L           | C        | 20,000              | 10,000         | 20,000           |
+| 1 - 1.5L           | C        | 25,000              | 12,000         | 25,000           |
+| >1.5L              | C        | 30,000              | 15,000         | 30,000           |
+| 50k - 1L           | D        | 15,000              | 8,000          | 15,000           |
+| 1 - 1.5L           | D        | 15,000              | 8,000          | 15,000           |
+| >1.5L              | D        | 20,000              | 10,000         | 20,000           |
+
+Would you like this in CSV or JSON format for easier use in a program?
+
+
+def get_eligibility(category, sanction_amount):
+    # Eligibility dataset
+    eligibility_data = [
+        {"Sanction Amount Range": "50k - 1L", "Category": "A", "Overall Eligibility": 40000, "OTC-Eligibility": 20000, "Non-OTC Eligibility": 40000},
+        {"Sanction Amount Range": "1 - 1.5L", "Category": "A", "Overall Eligibility": 45000, "OTC-Eligibility": 22000, "Non-OTC Eligibility": 45000},
+        {"Sanction Amount Range": ">1.5L", "Category": "A", "Overall Eligibility": 50000, "OTC-Eligibility": 25000, "Non-OTC Eligibility": 50000},
+        {"Sanction Amount Range": "50k - 1L", "Category": "B", "Overall Eligibility": 30000, "OTC-Eligibility": 15000, "Non-OTC Eligibility": 30000},
+        {"Sanction Amount Range": "1 - 1.5L", "Category": "B", "Overall Eligibility": 35000, "OTC-Eligibility": 18000, "Non-OTC Eligibility": 35000},
+        {"Sanction Amount Range": ">1.5L", "Category": "B", "Overall Eligibility": 40000, "OTC-Eligibility": 20000, "Non-OTC Eligibility": 40000},
+        {"Sanction Amount Range": "50k - 1L", "Category": "C", "Overall Eligibility": 20000, "OTC-Eligibility": 10000, "Non-OTC Eligibility": 20000},
+        {"Sanction Amount Range": "1 - 1.5L", "Category": "C", "Overall Eligibility": 25000, "OTC-Eligibility": 12000, "Non-OTC Eligibility": 25000},
+        {"Sanction Amount Range": ">1.5L", "Category": "C", "Overall Eligibility": 30000, "OTC-Eligibility": 15000, "Non-OTC Eligibility": 30000},
+        {"Sanction Amount Range": "50k - 1L", "Category": "D", "Overall Eligibility": 15000, "OTC-Eligibility": 8000, "Non-OTC Eligibility": 15000},
+        {"Sanction Amount Range": "1 - 1.5L", "Category": "D", "Overall Eligibility": 15000, "OTC-Eligibility": 8000, "Non-OTC Eligibility": 15000},
+        {"Sanction Amount Range": ">1.5L", "Category": "D", "Overall Eligibility": 20000, "OTC-Eligibility": 10000, "Non-OTC Eligibility": 20000},
+    ]
+
+    # Determine the sanction amount range
+    if 50000 <= sanction_amount <= 100000:
+        sa_range = "50k - 1L"
+    elif 100001 <= sanction_amount <= 150000:
+        sa_range = "1 - 1.5L"
+    else:
+        sa_range = ">1.5L"
+
+    # Find the matching entry
+    for entry in eligibility_data:
+        if entry["Category"] == category and entry["Sanction Amount Range"] == sa_range:
+            return entry
+
+    return None  # Return None if no match found
+
+# Example usage
+category = "B"
+sanction_amount = 130000
+eligibility = get_eligibility(category, sanction_amount)
+
+if eligibility:
+    print("Eligibility Details:", eligibility)
+else:
+    print("No matching eligibility found.")
+
+
+
+
+
+
+
+
+
+
+
+
