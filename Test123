@@ -174,3 +174,175 @@ Here’s your structured table:
 | > 800            | D        | 35,000              | 17,500         | 35,000           |
 
 Would you like me to generate a CSV or JSON file for this data?
+
+
+
+
+
+
+
+
+
+
+
+
+
+To track all changes made to a PDF since its creation, you can analyze:
+
+1. Metadata Changes – Check timestamps like creation, modification, and version history.
+
+
+2. Incremental Updates – PDFs can store changes in incremental updates, preserving original content.
+
+
+3. Content Differences – Compare text, images, and annotations between different versions of the PDF.
+
+
+4. Digital Signatures & Revisions – Some PDFs store revision history using digital signatures.
+
+
+
+
+---
+
+1. Check Metadata for Modification Timestamps
+
+Use PyMuPDF to extract creation and modification timestamps:
+
+import fitz
+
+def get_metadata(pdf_path):
+    doc = fitz.open(pdf_path)
+    metadata = doc.metadata
+    print(f"Creation Date: {metadata.get('creationDate', 'Unknown')}")
+    print(f"Modification Date: {metadata.get('modDate', 'Unknown')}")
+    return metadata
+
+get_metadata("sample.pdf")
+
+✅ If modDate is later than creationDate, the PDF was modified.
+
+
+---
+
+2. Detect Incremental Updates (Check If Changes Were Made)
+
+PDFs can be edited incrementally, preserving older versions. Use pypdf:
+
+from pypdf import PdfReader
+
+def check_incremental_updates(pdf_path):
+    reader = PdfReader(pdf_path)
+    if reader.trailer.get("/Prev"):
+        print("PDF has incremental updates (edited after creation).")
+        return True
+    print("No incremental updates detected.")
+    return False
+
+check_incremental_updates("sample.pdf")
+
+✅ If /Prev exists in the trailer, it means changes were made without modifying the original PDF.
+
+
+---
+
+3. Compare Content Between Revisions
+
+If you have an older version of the PDF, you can compare the text:
+
+import pdfplumber
+
+def extract_text(pdf_path):
+    text = ""
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() + "\n"
+    return text
+
+old_text = extract_text("original.pdf")
+new_text = extract_text("edited.pdf")
+
+if old_text == new_text:
+    print("No content changes detected.")
+else:
+    print("Changes detected in text!")
+
+✅ This helps if you have both original and modified versions.
+
+
+---
+
+4. Extract Digital Signatures & Revisions
+
+If the PDF has digital signatures, they might indicate revisions:
+
+from pypdf import PdfReader
+
+def check_signatures(pdf_path):
+    reader = PdfReader(pdf_path)
+    sigs = [field for field in reader.root.get("/AcroForm", {}).get("/Fields", []) if "/Sig" in field.get_object()]
+    if sigs:
+        print(f"PDF has {len(sigs)} digital signatures. Possible revision history exists.")
+        return True
+    print("No digital signatures found.")
+    return False
+
+check_signatures("signed.pdf")
+
+✅ If multiple digital signatures exist, they likely indicate multiple revisions.
+
+
+---
+
+5. Compare Images Between Versions
+
+If changes include images, extract them and compare:
+
+import fitz
+
+def extract_images(pdf_path):
+    doc = fitz.open(pdf_path)
+    images = []
+    for page in doc:
+        for img in page.get_images(full=True):
+            images.append(img[0])  # Image index
+    return set(images)
+
+old_images = extract_images("original.pdf")
+new_images = extract_images("edited.pdf")
+
+if old_images != new_images:
+    print("Changes detected in images!")
+
+✅ This helps if images were added, removed, or modified.
+
+
+---
+
+Final Workflow
+
+1. Check metadata (creation/modification dates).
+
+
+2. Look for incremental updates (detect if changes were appended).
+
+
+3. Compare text content (if an original version is available).
+
+
+4. Check for digital signatures (signatures indicate official changes).
+
+
+5. Compare images (detect visual changes).
+
+
+
+
+---
+
+Would you like me to create a unified script that performs all these checks at once?
+
+
+
+
+
