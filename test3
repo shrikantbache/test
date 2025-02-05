@@ -1,0 +1,37 @@
+import json
+import os
+from datetime import datetime
+from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
+
+# Define paths to old and new reports (update these paths accordingly)
+old_report_path = "reports/old_report.html"
+new_report_path = "reports/new_report.html"
+
+def extract_test_data(report_path):
+    """Extracts test data from a pytest-html report."""
+    if not os.path.exists(report_path):
+        print(f"Error: Report file {report_path} does not exist.")
+        return {}
+
+    with open(report_path, "r", encoding="utf-8") as file:
+        soup = BeautifulSoup(file, "html.parser")
+
+    # Locate the JSON test data within the <div id="data-container">
+    data_container = soup.find("div", {"id": "data-container"})
+    if not data_container:
+        print(f"Error: No test data found in {report_path}")
+        return {}
+
+    test_data = json.loads(data_container["data-jsonblob"])["tests"]
+
+    parsed_tests = {}
+    for test_name, test_entries in test_data.items():
+        test_info = test_entries[0]  # Get the latest test entry
+        parsed_tests[test_name] = {
+            "status": test_info["result"].lower(),
+            "time": float(test_info["duration"].replace(" ms", "")) / 1000,  # Convert ms to seconds
+            "logs": test_info.get("log", "No logs available")
+        }
+
+    return parsed_tests
