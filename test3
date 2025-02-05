@@ -84,3 +84,24 @@ for test_name, new_data in new_tests.items():
                 "increase": time_diff
             })
 
+
+# Load Jinja2 template
+env = Environment(loader=FileSystemLoader('.'))
+template = env.get_template("comparison_template.html")
+
+# Render template with data
+comparison_html = template.render(
+    old_report=old_report_path,
+    new_report=new_report_path,
+    new_tests=comparison_results["new_tests"],
+    failed_tests=comparison_results["failed_tests"],
+    time_differences=comparison_results["time_differences"]
+)
+
+# Save the comparison report
+comparison_report_path = f"reports/comparison_{datetime.now().strftime('%Y-%m-%d')}.html"
+with open(comparison_report_path, "w", encoding="utf-8") as f:
+    f.write(comparison_html)
+
+print(f"Comparison report saved to {comparison_report_path}")
+
