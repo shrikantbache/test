@@ -1,0 +1,98 @@
+import json
+import os
+from datetime import datetime
+from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
+
+# Define paths for old and new pytest HTML reports
+old_report = "reports/pytest_report_2024-01-01.html"
+new_report = "reports/pytest_report_2024-01-11.html"
+
+def extract_test_details(report_path):
+    """Extract detailed test case results from a pytest HTML report."""
+    if not os.path.exists(report_path):
+        print(f"Error: Report file {report_path} does not exist.")
+        return {}
+
+    with open(report_path, "r", encoding="utf-8") as file:
+        soup = BeautifulSoup(file, "html.parser")
+
+    test_cases = {}
+    for row in soup.find_all("tr", class_="results-table-row"):
+        cols = row.find_all("td")
+        if len(cols) < 4:
+            continue
+        test_name = cols[0].text.strip()
+        status = cols[1].text.strip().lower()
+        execution_time = float(cols[2].text.strip().replace("s", ""))
+        logs = cols[3].text.strip()
+
+        test_cases[test_name] = {
+            "status": status,
+            "time": execution_time,
+            "logs": logs
+        }
+    return test_cases
+
+# Extract test details from both reports
+old_tests = extract_test_details(old_report)
+new_tests = extract_test_details(new_report)
+
+comparison_result = {
+    "previous_report": old_report,
+    "new_report": new_report,
+    "new_tests": [],
+    "failed_tests": [],
+    "time_differences": [],
+}
+
+# Identify newly added test cases
+for test_name in new_tests:
+    if test_name not in old_tests:
+        comparison_result["new_tests"].append(test_name)
+
+# Identify failed test cases and compare logs
+for test_name, new_data in new_tests.items():
+    if new_data["status"] == "failed":
+        old_status = old_tests.get(test_name, {}).get("status", "not present")
+        comparison_result["failed_tests"].append({
+            "test": test_name,
+            "old_status": old_status,
+            "new_status": "failed",
+            "old_logs": old_tests.get(test_name, {}).get("logs", "No logs"),
+            "new_logs": new_data["logs"]
+        })
+
+# Identify test cases that took longer than before
+for test_name, new_data in new_tests.items():
+    if test_name in old_tests:
+        old_time = old_tests[test_name]["time"]
+        new_time = new_data["time"]
+        time_diff = new_time - old_time
+        if time_diff > 0:
+            comparison_result["time_differences"].append({
+                "test": test_name,
+                "old_time": old_time,
+                "new_time": new_time,
+                "increase": time_diff
+            })
+
+# Load Jinja2 template
+env = Environment(loader=FileSystemLoader('.'))
+template = env.get_template("comparison_template.html")
+
+# Render template with data
+comparison_html = template.render(
+    old_report=old_report,
+    new_report=new_report,
+    new_tests=comparison_result["new_tests"],
+    failed_tests=comparison_result["failed_tests"],
+    time_differences=comparison_result["time_differences"]
+)
+
+# Save comparison HTML report
+comparison_report_path = f"reports/comparison_{datetime.now().strftime('%Y-%m-%d')}.html"
+with open(comparison_report_path, "w", encoding="utf-8") as f:
+    f.write(comparison_html)
+
+print(f"Comparison report saved to {comparison_report_path}")
