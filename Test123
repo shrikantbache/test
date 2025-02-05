@@ -346,3 +346,200 @@ Would you like me to create a unified script that performs all these checks at o
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+Here is a single script that extracts and compares text, images, and annotations from a PDF to detect all changes made since its creation.
+
+Features
+
+✅ Detects incremental updates (if the PDF was modified after creation).
+✅ Extracts previous versions from the PDF.
+✅ Compares text (added, removed, or modified content).
+✅ Detects image changes (added or removed images).
+✅ Identifies annotation changes (comments, highlights, etc.).
+
+
+---
+
+📜 Full Script
+
+import os
+import fitz  # PyMuPDF
+import pdfplumber
+from pypdf import PdfReader
+
+def check_incremental_updates(pdf_path):
+    """Check if the PDF has incremental updates (modified after creation)."""
+    reader = PdfReader(pdf_path)
+    if reader.trailer.get("/Prev"):
+        print(f"[INFO] PDF has incremental updates.")
+        return True
+    print("[INFO] No incremental updates detected.")
+    return False
+
+def extract_old_versions(pdf_path):
+    """Extracts previous versions of the PDF (if incremental updates exist)."""
+    with open(pdf_path, "rb") as f:
+        data = f.read()
+
+    versions = data.split(b"%%EOF")  # Split at EOF markers
+    version_paths = []
+
+    if len(versions) > 2:  # More than one version exists
+        for i, version in enumerate(versions[:-1], start=1):
+            version_path = f"version_{i}.pdf"
+            with open(version_path, "wb") as f:
+                f.write(version + b"%%EOF")
+            version_paths.append(version_path)
+            print(f"[INFO] Extracted previous version: {version_path}")
+
+    if version_paths:
+        return version_paths[0]  # Return the first version (original)
+    return None
+
+def extract_text(pdf_path):
+    """Extracts text content from a PDF."""
+    text = ""
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+    return text
+
+def extract_images(pdf_path):
+    """Extracts image hashes from a PDF."""
+    doc = fitz.open(pdf_path)
+    images = set()
+    for page in doc:
+        for img in page.get_images(full=True):
+            images.add(img[0])  # Image index
+    return images
+
+def extract_annotations(pdf_path):
+    """Extracts annotations (comments, highlights) from a PDF."""
+    doc = fitz.open(pdf_path)
+    annotations = []
+    for page in doc:
+        for annot in page.annots():
+            annotations.append(annot.info)
+    return annotations
+
+def compare_pdfs(original_pdf, modified_pdf):
+    """Compares original and modified PDFs for text, image, and annotation changes."""
+    original_text = extract_text(original_pdf)
+    modified_text = extract_text(modified_pdf)
+
+    if original_text != modified_text:
+        print("\n🔹 [CHANGE DETECTED] Text modifications found!")
+        print("\n--- Original Text (First 500 chars) ---\n", original_text[:500])
+        print("\n--- Modified Text (First 500 chars) ---\n", modified_text[:500])
+
+    original_images = extract_images(original_pdf)
+    modified_images = extract_images(modified_pdf)
+
+    added_images = modified_images - original_images
+    removed_images = original_images - modified_images
+
+    if added_images:
+        print(f"\n🔹 [CHANGE DETECTED] New images added: {added_images}")
+    if removed_images:
+        print(f"\n🔹 [CHANGE DETECTED] Images removed: {removed_images}")
+
+    original_annotations = extract_annotations(original_pdf)
+    modified_annotations = extract_annotations(modified_pdf)
+
+    if original_annotations != modified_annotations:
+        print("\n🔹 [CHANGE DETECTED] Annotations modified!")
+
+def analyze_pdf_changes(pdf_path):
+    """Main function to analyze changes in a PDF."""
+    print(f"\n🔍 Analyzing changes in: {pdf_path}\n")
+
+    if check_incremental_updates(pdf_path):
+        original_version = extract_old_versions(pdf_path)
+
+        if original_version:
+            print("\n🔄 Comparing extracted original version with modified version...\n")
+            compare_pdfs(original_version, pdf_path)
+        else:
+            print("\n⚠️ Could not extract original version. Manual comparison needed.")
+    else:
+        print("\n✅ No modifications detected.")
+
+# Run the script with a sample PDF
+pdf_file = "sample.pdf"  # Replace with your PDF file path
+analyze_pdf_changes(pdf_file)
+
+
+---
+
+🔹 How It Works
+
+1. Checks for incremental updates using /Prev in the PDF structure.
+
+
+2. Extracts the original version if changes were made.
+
+
+3. Compares original and modified versions for changes in:
+
+Text content (modified or removed text).
+
+Images (added or removed images).
+
+Annotations (comments, highlights, etc.).
+
+
+
+
+
+---
+
+✅ Example Output
+
+🔍 Analyzing changes in: sample.pdf
+
+[INFO] PDF has incremental updates.
+[INFO] Extracted previous version: version_1.pdf
+
+🔄 Comparing extracted original version with modified version...
+
+🔹 [CHANGE DETECTED] Text modifications found!
+
+--- Original Text (First 500 chars) ---
+"Original text content here..."
+
+--- Modified Text (First 500 chars) ---
+"Modified text content here..."
+
+🔹 [CHANGE DETECTED] New images added: {3, 5}
+🔹 [CHANGE DETECTED] Images removed: {1}
+🔹 [CHANGE DETECTED] Annotations modified!
+
+
+---
+
+📌 Notes
+
+This script extracts changes only if the PDF was incrementally updated (not fully overwritten).
+
+If the original version isn't extractable, manual comparison is required.
+
+Works well for text-heavy PDFs and documents with incremental changes (like contracts, invoices, etc.).
+
+
+Would you like additional PDF change tracking features, such as highlighting added/removed text?
+
+
+
+
