@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report Comparison</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .failed { background-color: #ffdddd; }
+        .new { background-color: #ddffdd; }
+        .slower { background-color: #fff2cc; }
+    </style>
+</head>
+<body>
+    <h1>Test Report Comparison</h1>
+    <p><strong>Old Report:</strong> {{ old_report }}</p>
+    <p><strong>New Report:</strong> {{ new_report }}</p>
+
+    <h2>New Test Cases</h2>
+    <table>
+        <tr><th>Test Name</th></tr>
+        {% for test in new_tests %}
+        <tr class="new"><td>{{ test }}</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Failed Test Cases</h2>
+    <table>
+        <tr><th>Test Name</th><th>Old Status</th><th>New Status</th><th>Old Logs</th><th>New Logs</th></tr>
+        {% for failure in failed_tests %}
+        <tr class="failed">
+            <td>{{ failure.test }}</td>
+            <td>{{ failure.old_status }}</td>
+            <td>{{ failure.new_status }}</td>
+            <td>{{ failure.old_logs }}</td>
+            <td>{{ failure.new_logs }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Test Cases with Increased Execution Time</h2>
+    <table>
+        <tr><th>Test Name</th><th>Old Time (s)</th><th>New Time (s)</th><th>Increase (s)</th></tr>
+        {% for test in time_differences %}
+        <tr class="slower">
+            <td>{{ test.test }}</td>
+            <td>{{ test.old_time }}</td>
+            <td>{{ test.new_time }}</td>
+            <td>{{ test.increase }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
