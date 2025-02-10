@@ -28,3 +28,56 @@ Here is the corrected table:
 
 Let me know if you need any modifications or format conversions!
 
+
+
+
+
+
+
+
+
+from marshmallow import Schema, fields, validate, ValidationError, EXCLUDE, post_load
+import re
+
+# Custom validator to allow only alphanumeric characters and spaces
+def no_special_chars(value):
+    if not re.match(r"^[a-zA-Z0-9 ]*$", value):
+        raise ValidationError("Special characters are not allowed.")
+
+class CustomSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE  # Ignore unknown fields, but we validate them manually
+
+    # Apply validation to certain known fields
+    name = fields.Str(required=True, validate=no_special_chars)
+    age = fields.Int(required=True, validate=validate.Range(min=18, max=100))
+    email = fields.Email(required=True)  # No special char validation needed for email
+    country = fields.Str(required=True, validate=no_special_chars)
+
+    # Validate all unknown fields dynamically
+    @post_load
+    def validate_unknown_fields(self, data, **kwargs):
+        for key, value in self.context.get("raw_data", {}).items():
+            if key not in self.fields:  # Only validate unknown fields
+                if isinstance(value, str) and not re.match(r"^[a-zA-Z0-9 ]*$", value):
+                    raise ValidationError({key: ["Special characters are not allowed."]})
+        return data
+
+# Example input data with an unknown field
+user_data = {
+    "name": "JohnDoe",
+    "age": 25,
+    "email": "john@example.com",
+    "country": "US",
+    "nickname": "Johnny!",  # This unknown field should trigger a validation error
+    "city": "New York"  # This should pass
+}
+
+try:
+    schema = CustomSchema()
+    schema.context["raw_data"] = user_data  # Store raw input data for unknown field validation
+    validated_data = schema.load(user_data)
+    print("Validated Data:", validated_data)
+except ValidationError as err:
+    print("Validation Errors:", err.messages)
+
