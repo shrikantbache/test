@@ -15,3 +15,16 @@ Would you like this in CSV or JSON format?
 
 
 
+
+
+Here is the corrected table:  
+
+| App Score | Overall Eligibility | OTC-Eligibility | Non-OTC Eligibility |
+|-----------|---------------------|----------------|---------------------|
+| A         | 20,000              | 12,000         | 20,000              |
+| B         | 15,000              | 9,000          | 15,000              |
+| C         | 12,500              | 10,000         | 12,500              |
+| D         | N/A                 | N/A            | N/A                 |
+
+Let me know if you need any modifications or format conversions!
+
