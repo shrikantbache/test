@@ -81,3 +81,51 @@ try:
 except ValidationError as err:
     print("Validation Errors:", err.messages)
 
+
+
+
+
+
+
+
+eligibility_data_hl_grt_50 = {
+    'A': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (80000, 48000, 80000),
+        (725, 749): (80000, 48000, 80000),
+        (750, 800): (100000, 60000, 100000),
+        (801, float('inf')): (100000, 60000, 100000)
+    },
+    'B': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (55000, 33000, 55000),
+        (725, 749): (90000, 54000, 90000),
+        (750, 800): (90000, 54000, 90000),
+        (801, float('inf')): (90000, 54000, 90000)
+    },
+    'C': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 749): (35000, 17500, 35000),
+        (750, 779): (60000, 30000, 60000),
+        (780, 800): (60000, 30000, 60000),
+        (801, float('inf')): (75000, 37500, 75000)
+    },
+    'D': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 779): (50000, 25000, 50000),
+        (780, 800): (50000, 25000, 50000),
+        (801, float('inf')): (50000, 25000, 50000)
+    }
+}
+
+# Function to get eligibility values
+def get_eligibility_hl_grt_50(category, score):
+    if category in eligibility_data_hl_grt_50:
+        for score_range, eligibility in eligibility_data_hl_grt_50[category].items():
+            if score_range[0] <= score <= score_range[1]:
+                return {"Category": category, "Score": score, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Score": score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
