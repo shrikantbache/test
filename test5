@@ -1,0 +1,78 @@
+import pandas as pd
+
+# Define the dictionary
+eligibility_data_hl_grt_50 = {
+    'A': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (80000, 48000, 80000),
+        (725, 749): (80000, 48000, 80000),
+        (750, 800): (100000, 60000, 100000),
+        (801, float('inf')): (100000, 60000, 100000)
+    },
+    'B': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (55000, 33000, 55000),
+        (725, 749): (90000, 54000, 90000),
+        (750, 800): (90000, 54000, 90000),
+        (801, float('inf')): (90000, 54000, 90000)
+    },
+    'C': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 749): (35000, 17500, 35000),
+        (750, 779): (60000, 30000, 60000),
+        (780, 800): (60000, 30000, 60000),
+        (801, float('inf')): (75000, 37500, 75000)
+    },
+    'D': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 779): (50000, 25000, 50000),
+        (780, 800): (50000, 25000, 50000),
+        (801, float('inf')): (50000, 25000, 50000)
+    }
+}
+
+# Convert dictionary to a list of records
+data = []
+for category, ranges in eligibility_data_hl_grt_50.items():
+    for (low, high), (overall, otc, non_otc) in ranges.items():
+        data.append([category, low, high, overall, otc, non_otc])
+
+# Create a Pandas DataFrame
+df = pd.DataFrame(data, columns=["Category", "Score_Low", "Score_High", "Overall", "OTC", "Non_OTC"])
+
+# Display the DataFrame
+# print("Converted DataFrame:\n", df)
+
+
+csv_filename = "eligibility_data.csv"
+df.to_csv(csv_filename, index=False)
+
+print(f"Data saved to {csv_filename}")
+
+
+df_new = pd.read_csv(csv_filename)
+
+# Display the DataFrame
+# print("Loaded DataFrame from CSV:\n", df_new)
+
+
+def get_eligibility_from_df(df, category, score):
+    # Filter DataFrame based on category and score range
+    result = df[
+        (df["Category"] == category) &
+        (df["Score_Low"] <= score) &
+        (df["Score_High"] >= score)
+        ]
+
+    if not result.empty:
+        return result.iloc[0].to_dict()
+    else:
+        return {"Category": category, "Score": score, "Overall": 0, "OTC": 0, "Non_OTC": 0}
+
+
+# Example usage
+print(get_eligibility_from_df(df_new, 'A', 900))
+print(get_eligibility_from_df(df_new, 'C', 800))
+print(get_eligibility_from_df(df_new, 'D', 650))
