@@ -1,0 +1,394 @@
+import pandas as pd
+
+# Define the dictionary
+eligibility_data_hl_grt_50 = {
+    'A': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (80000, 48000, 80000),
+        (725, 749): (80000, 48000, 80000),
+        (750, 800): (100000, 60000, 100000),
+        (801, float('inf')): (100000, 60000, 100000)
+    },
+    'B': {
+        (650, 679): (40000, 24000, 40000),
+        (680, 700): (55000, 33000, 55000),
+        (701, 724): (55000, 33000, 55000),
+        (725, 749): (90000, 54000, 90000),
+        (750, 800): (90000, 54000, 90000),
+        (801, float('inf')): (90000, 54000, 90000)
+    },
+    'C': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 749): (35000, 17500, 35000),
+        (750, 779): (60000, 30000, 60000),
+        (780, 800): (60000, 30000, 60000),
+        (801, float('inf')): (75000, 37500, 75000)
+    },
+    'D': {
+        (650, 725): (35000, 17500, 35000),
+        (726, 779): (50000, 25000, 50000),
+        (780, 800): (50000, 25000, 50000),
+        (801, float('inf')): (50000, 25000, 50000)
+    }
+}
+
+# Convert dictionary to a list of records
+data = []
+for category, ranges in eligibility_data_hl_grt_50.items():
+    for (low, high), (overall, otc, non_otc) in ranges.items():
+        data.append([category, low, high, overall, otc, non_otc])
+
+# Create a Pandas DataFrame
+df = pd.DataFrame(data, columns=["Category", "Score_Low", "Score_High", "Overall", "OTC", "Non_OTC"])
+
+# Display the DataFrame
+# print("Converted DataFrame:\n", df)
+
+
+csv_filename = "eligibility_data.csv"
+df.to_csv(csv_filename, index=False)
+
+print(f"Data saved to {csv_filename}")
+
+
+df_new = pd.read_csv(csv_filename)
+
+# Display the DataFrame
+# print("Loaded DataFrame from CSV:\n", df_new)
+
+
+def get_eligibility_from_df(df, category, score):
+    # Filter DataFrame based on category and score range
+    result = df[
+        (df["Category"] == category) &
+        (df["Score_Low"] <= score) &
+        (df["Score_High"] >= score)
+        ]
+
+    if not result.empty:
+        return result.iloc[0].to_dict()
+    else:
+        return {"Category": category, "Score": score, "Overall": 0, "OTC": 0, "Non_OTC": 0}
+
+
+# Example usage
+print(get_eligibility_from_df(df_new, 'A', 900))
+print(get_eligibility_from_df(df_new, 'C', 800))
+print(get_eligibility_from_df(df_new, 'D', 650))
+
+
+
+
+# Defining the dataset with provided score ranges for HL between 30 to 50
+eligibility_data_30_50 = {
+    'A': {
+        (650, 679): (35000, 21000, 35000),
+        (680, 700): (50000, 30000, 50000),
+        (701, 724): (60000, 36000, 60000),
+        (725, 749): (60000, 36000, 60000),
+        (750, 800): (75000, 45000, 75000),
+        (801, float('inf')): (75000, 45000, 75000)
+    },
+    'B': {
+        (650, 679): (35000, 21000, 35000),
+        (680, 700): (50000, 30000, 50000),
+        (701, 724): (50000, 30000, 50000),
+        (725, 749): (75000, 45000, 75000),
+        (750, 800): (75000, 45000, 75000),
+        (801, float('inf')): (75000, 45000, 75000)
+    },
+    'C': {
+        (650, 725): (25000, 12500, 25000),
+        (726, 749): (25000, 12500, 25000),
+        (750, 779): (50000, 25000, 50000),
+        (780, 800): (50000, 25000, 50000),
+        (801, float('inf')): (60000, 30000, 60000)
+    },
+    'D': {
+        (650, 725): (25000, 12500, 25000),
+        (726, 779): (35000, 17500, 35000),
+        (780, 800): (35000, 17500, 35000),
+        (801, float('inf')): (50000, 25000, 50000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def get_eligibility_hl_30_50(category, score):
+    if category in eligibility_data_30_50:
+        for score_range, eligibility in eligibility_data_30_50[category].items():
+            if score_range[0] <= score <= score_range[1]:
+                return {"Category": category, "Score": score, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Score": score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+# Defining the dataset with provided score ranges for HL less than 30L
+eligibility_data_lt_30 = {
+    'A': {
+        (650, 679): (25000, 15000, 25000),
+        (680, 700): (40000, 24000, 40000),
+        (701, 724): (50000, 30000, 50000),
+        (725, 749): (50000, 30000, 50000),
+        (750, 800): (60000, 36000, 60000),
+        (801, float('inf')): (60000, 36000, 60000)
+    },
+    'B': {
+        (650, 679): (25000, 15000, 25000),
+        (680, 700): (35000, 21000, 35000),
+        (701, 724): (35000, 21000, 35000),
+        (725, 749): (50000, 30000, 50000),
+        (750, 800): (50000, 30000, 50000),
+        (801, float('inf')): (50000, 30000, 50000)
+    },
+    'C': {
+        (650, 725): (20000, 10000, 20000),
+        (726, 749): (20000, 10000, 20000),
+        (750, 779): (35000, 17500, 35000),
+        (780, 800): (35000, 17500, 35000),
+        (801, float('inf')): (40000, 20000, 40000)
+    },
+    'D': {
+        (650, 725): (20000, 10000, 20000),
+        (726, 779): (25000, 12500, 25000),
+        (780, 800): (25000, 12500, 25000),
+        (801, float('inf')): (35000, 17500, 35000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def get_eligibility_hl_lt_30(category, score):
+    if category in eligibility_data_lt_30:
+        for score_range, eligibility in eligibility_data_lt_30[category].items():
+            if score_range[0] <= score <= score_range[1]:
+                return {"Category": category, "Score": score, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Score": score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+
+
+
+# Defining the dataset with provided score ranges for HL less than 30L
+thick_cc_based_eligibility_data = {
+    'A': {
+        (50000, 100000): (40000, 20000, 40000),
+        (100001, 150000): (45000, 22000, 45000),
+        (150001, float('inf')): (50000, 25000, 50000)
+    },
+    'B': {
+        (50000, 100000): (30000, 15000, 30000),
+        (100001, 150000): (35000, 18000, 35000),
+        (150001, float('inf')): (40000, 20000, 40000)
+    },
+    'C': {
+        (50000, 100000): (20000, 10000, 20000),
+        (100001, 150000): (25000, 12000, 25000),
+        (150001, float('inf')): (30000, 15000, 30000)
+    },
+    'D': {
+        (50000, 100000): (15000, 8000, 15000),
+        (100001, 150000): (15000, 8000, 15000),
+        (150001, float('inf')): (20000, 10000, 20000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def get_cc_based_eligibility(category, amount):
+    if category in thick_cc_based_eligibility_data:
+        for amount_range, eligibility in thick_cc_based_eligibility_data[category].items():
+            if amount_range[0] <= amount <= amount_range[1]:
+                return {"Category": category, "Sanction Amount": amount, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Sanction Amount": amount, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+thin_cc_based_eligibility_data_sanction = {
+    'A': {
+        (50000, 100000): (20000, 20000, 20000),
+        (100001, 150000): (22000, 22000, 22000),
+        (150001, float('inf')): (25000, 25000, 25000)
+    },
+    'B': {
+        (50000, 100000): (15000, 15000, 15000),
+        (100001, 150000): (18000, 18000, 18000),
+        (150001, float('inf')): (20000, 20000, 20000)
+    },
+    'C': {
+        (50000, 100000): (10000, 10000, 10000),
+        (100001, 150000): (12000, 12000, 12000),
+        (150001, float('inf')): (15000, 15000, 15000)
+    },
+    'D': {
+        (50000, 100000): (8000, 8000, 8000),
+        (100001, 150000): (8000, 8000, 8000),
+        (150001, float('inf')): (10000, 10000, 10000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def get_thin_cc_based_eligibility(category, amount):
+    if category in thin_cc_based_eligibility_data_sanction:
+        for amount_range, eligibility in thin_cc_based_eligibility_data_sanction[category].items():
+            if amount_range[0] <= amount <= amount_range[1]:
+                return {"Category": category, "Sanction Amount": amount, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Sanction Amount": amount, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+
+thick_get_eligibility_bureau_based_data = {
+    'A': {
+        (650, 679): (25000, 10000, 25000),
+        (680, 700): (35000, 14000, 35000),
+        (701, 724): (50000, 20000, 50000),
+        (725, 749): (75000, 37500, 75000),
+        (750, 800): (75000, 60000, 75000),
+        (801, float('inf')): (90000, 0, 0)
+    },
+    'B': {
+        (650, 679): (25000, 10000, 25000),
+        (680, 700): (35000, 14000, 35000),
+        (701, 724): (50000, 20000, 50000),
+        (725, 740): (50000, 25000, 50000),
+        (750, 800): (75000, 60000, 75000),
+        (801, float('inf')): (75000, 67500, 75000)
+    },
+    'C': {
+        (650, 725): (25000, 10000, 25000),
+        (726, 749): (25000, 10000, 25000),
+        (750, 779): (50000, 25000, 50000),
+        (780, 800): (50000, 30000, 50000),
+        (801, float('inf')): (50000, 30000, 50000)
+    },
+    'D': {
+        (650, 725): (25000, 10000, 25000),
+        (726, 779): (25000, 10000, 25000),
+        (780, 800): (35000, 14000, 35000),
+        (801, float('inf')): (35000, 17500, 35000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def thick_get_eligibility_bureau_based(category, score):
+    if category in thick_get_eligibility_bureau_based_data:
+        for score_range, eligibility in thick_get_eligibility_bureau_based_data[category].items():
+            if score_range[0] <= score <= score_range[1]:
+                return {"Category": category, "Bureau Score": score, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Bureau Score": score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+thin_eligibility_data_bureau_based = {
+    'A': {
+        (650, 679): (25000, 10000, 25000),
+        (680, 700): (35000, 14000, 35000),
+        (701, 724): (35000, 14000, 35000),
+        (725, 749): (50000, 25000, 50000),
+        (750, 800): (50000, 40000, 50000),
+        (801, float('inf')): (75000, 67500, 75000)
+    },
+    'B': {
+        (650, 679): (25000, 10000, 25000),
+        (680, 700): (35000, 14000, 35000),
+        (701, 724): (35000, 14000, 35000),
+        (725, 749): (50000, 25000, 50000),
+        (750, 800): (50000, 40000, 50000),
+        (801, float('inf')): (75000, 67500, 75000)
+    },
+    'C': {
+        (650, 725): (25000, 10000, 25000),
+        (725, 749): (25000, 10000, 25000),
+        (750, 779): (35000, 17500, 35000),
+        (780, 800): (35000, 21000, 35000),
+        (801, float('inf')): (50000, 30000, 50000)
+    },
+    'D': {
+        (650, 725): (25000, 10000, 25000),
+        (725, 779): (25000, 10000, 25000),
+        (780, 800): (35000, 14000, 35000),
+        (801, float('inf')): (35000, 17500, 35000)
+    }
+}
+
+# Function to get eligibility values without using bisect
+def thin_get_eligibility_bureau_based(category, score):
+    if category in thin_eligibility_data_bureau_based:
+        for score_range, eligibility in thin_eligibility_data_bureau_based[category].items():
+            if score_range[0] <= score <= score_range[1]:
+                return {"Category": category, "Bureau Score": score, "Overall": eligibility[0], "OTC": eligibility[1], "Non OTC": eligibility[2]}
+    return {"Category": category, "Bureau Score": score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+import pandas as pd
+
+
+# Function to convert dictionary-based data into DataFrame
+def dict_to_dataframe(data_dict, category_name, value_names):
+    rows = []
+    for category, ranges in data_dict.items():
+        for (lower, upper), values in ranges.items():
+            rows.append([category, lower, upper, *values])
+
+    return pd.DataFrame(rows, columns=["Category", "Lower Bound", "Upper Bound"] + value_names)
+
+
+# Column names for eligibility datasets
+columns = ["Overall", "OTC", "Non OTC"]
+
+# Creating DataFrames from dictionaries
+df_eligibility_30_50 = dict_to_dataframe(eligibility_data_30_50, "HL_30_50", columns)
+df_eligibility_lt_30 = dict_to_dataframe(eligibility_data_lt_30, "HL_LT_30", columns)
+df_thick_cc = dict_to_dataframe(thick_cc_based_eligibility_data, "Thick_CC", columns)
+df_thin_cc = dict_to_dataframe(thin_cc_based_eligibility_data_sanction, "Thin_CC", columns)
+
+# Save DataFrames as CSV files
+df_eligibility_30_50.to_csv("eligibility_30_50.csv", index=False)
+df_eligibility_lt_30.to_csv("eligibility_lt_30.csv", index=False)
+df_thick_cc.to_csv("thick_cc_eligibility.csv", index=False)
+df_thin_cc.to_csv("thin_cc_eligibility.csv", index=False)
+
+print("CSV files saved successfully.")
+
+
+
+
+import pandas as pd
+
+# Load CSV files as DataFrames
+df_eligibility_30_50 = pd.read_csv("eligibility_30_50.csv")
+df_eligibility_lt_30 = pd.read_csv("eligibility_lt_30.csv")
+df_thick_cc = pd.read_csv("thick_cc_eligibility.csv")
+df_thin_cc = pd.read_csv("thin_cc_eligibility.csv")
+
+# Function to check eligibility from DataFrame
+def get_eligibility(df, category, score, score_column):
+    subset = df[df["Category"] == category]
+    for _, row in subset.iterrows():
+        if row["Lower Bound"] <= score <= row["Upper Bound"]:
+            return {
+                "Category": category,
+                score_column: score,
+                "Overall": row["Overall"],
+                "OTC": row["OTC"],
+                "Non OTC": row["Non OTC"]
+            }
+    return {"Category": category, score_column: score, "Overall": 0, "OTC": 0, "Non OTC": 0}
+
+
+# Functions for HL and CC-based eligibility
+def get_eligibility_hl_30_50(category, score):
+    return get_eligibility(df_eligibility_30_50, category, score, "Score")
+
+
+def get_eligibility_hl_lt_30(category, score):
+    return get_eligibility(df_eligibility_lt_30, category, score, "Score")
+
+
+def get_cc_based_eligibility(category, amount):
+    return get_eligibility(df_thick_cc, category, amount, "Sanction Amount")
+
+
+def get_thin_cc_based_eligibility(category, amount):
+    return get_eligibility(df_thin_cc, category, amount, "Sanction Amount")
+
+
+res = get_eligibility_hl_30_50("A", 749 )
+
+res = get_eligibility_hl_lt_30("D",801)
+print("res -",res)
